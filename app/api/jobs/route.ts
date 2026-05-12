@@ -1,116 +1,93 @@
 import { NextResponse } from "next/server";
 
-const externalJobs = [
-  {
-    job_id: "api-001",
-    job_title: "Frontend Engineer",
-    company_name: "TechNova",
-    location: "Remote",
-    employment_type: "Full-time",
-    job_description: "We are looking for a frontend engineer skilled in React, JavaScript, CSS, HTML, and Tailwind CSS. Experience with Bootstrap is a plus.",
-    salary_range: "$60,000 - $80,000"
-  },
-  {
-    job_id: "api-002",
-    job_title: "Cyber Security Specialist",
-    company_name: "SecureNet",
-    location: "Hybrid",
-    employment_type: "Full-time",
-    job_description: "The ideal candidate should have experience with SIEM, Linux, penetration testing, incident response, and network security.",
-    salary_range: "$75,000 - $95,000"
-  },
-  {
-    job_id: "api-003",
-    job_title: "Backend Engineer",
-    company_name: "DataScale",
-    location: "Remote",
-    employment_type: "Full-time",
-    job_description: "Expertise in Node.js, Express, SQL, and MongoDB is required. Knowledge of API design and database management is essential.",
-    salary_range: "$80,000 - $110,000"
-  },
-  {
-    job_id: "api-004",
-    job_title: "Full Stack Developer",
-    company_name: "CloudFlow",
-    location: "Remote",
-    employment_type: "Full-time",
-    job_description: "Seeking a developer proficient in React, Node.js, and PostgreSQL. Experience with TypeScript and GraphQL is preferred.",
-    salary_range: "$90,000 - $125,000"
-  },
-  {
-    job_id: "api-005",
-    job_title: "Data Scientist",
-    company_name: "Insightly",
-    location: "On-site",
-    employment_type: "Full-time",
-    job_description: "We need someone with strong Python, Pandas, and NumPy skills. Experience in Machine Learning, Statistics, and Data Visualization is a must.",
-    salary_range: "$85,000 - $115,000"
-  },
-  {
-    job_id: "api-006",
-    job_title: "Machine Learning Engineer",
-    company_name: "AIVision",
-    location: "Remote",
-    employment_type: "Full-time",
-    job_description: "Expertise in Python, PyTorch, and TensorFlow. Candidate will work on Deep Learning, NLP, and model optimization.",
-    salary_range: "$110,000 - $150,000"
-  },
-  {
-    job_id: "api-007",
-    job_title: "Ethical Hacker",
-    company_name: "ShieldOps",
-    location: "Hybrid",
-    employment_type: "Contract",
-    job_description: "Perform Penetration Testing and Vulnerability Assessment. Proficiency in Kali Linux and Ethical Hacking tools is mandatory.",
-    salary_range: "$90/hr - $110/hr"
-  },
-  {
-    job_id: "api-008",
-    job_title: "Blockchain Engineer",
-    company_name: "CryptoLogic",
-    location: "Remote",
-    employment_type: "Full-time",
-    job_description: "Develop smart contracts using Solidity. Experience with Ethereum, Web3.js, and Blockchain security is required.",
-    salary_range: "$120,000 - $170,000"
-  },
-  {
-    job_id: "api-009",
-    job_title: "Mobile App Developer",
-    company_name: "AppSphere",
-    location: "Remote",
-    employment_type: "Full-time",
-    job_description: "Build high-performance apps with React Native or Flutter. Experience with iOS/Android development and Redux.",
-    salary_range: "$80,000 - $110,000"
-  },
-  {
-    job_id: "api-010",
-    job_title: "Game Developer",
-    company_name: "NeoPixel",
-    location: "On-site",
-    employment_type: "Full-time",
-    job_description: "Experience with Unity, C#, and 3D modeling. Knowledge of Shader programming and game physics is a plus.",
-    salary_range: "$75,000 - $105,000"
-  },
-  {
-    job_id: "api-011",
-    job_title: "React Developer",
-    company_name: "WebWizards",
-    location: "Remote",
-    employment_type: "Full-time",
-    job_description: "Specialized in React, Next.js, and CSS modules. Passionate about building responsive UI and fast web apps.",
-    salary_range: "$70,000 - $95,000"
-  },
-  {
-    job_id: "api-012",
-    job_title: "Cyber Security Analyst",
-    company_name: "WallSecure",
-    location: "Hybrid",
-    employment_type: "Full-time",
-    job_description: "Monitor Network Security, conduct risk assessments, and manage firewalls and encryption protocols.",
-    salary_range: "$85,000 - $105,000"
-  }
-];
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const what = searchParams.get('what') || 'developer';
+  
+  const adzunaAppId = process.env.ADZUNA_APP_ID;
+  const adzunaAppKey = process.env.ADZUNA_APP_KEY;
+  const joobleApiKey = process.env.JOOBLE_API_KEY;
 
-export async function GET() {
-  return NextResponse.json(externalJobs);
+  let allJobs: any[] = [];
+
+  // 1. Fetch from Adzuna
+  const fetchAdzuna = async () => {
+    if (!adzunaAppId || !adzunaAppKey) return [];
+    
+    const response = await fetch(
+      `https://api.adzuna.com/v1/api/jobs/us/search/1?app_id=${adzunaAppId}&app_key=${adzunaAppKey}&results_per_page=20&what=${encodeURIComponent(what)}`,
+      { cache: 'no-store' }
+    );
+
+    if (!response.ok) throw new Error(`Adzuna API status: ${response.status}`);
+    const data = await response.json();
+    
+    return (data.results || []).map((adzunaJob: any) => {
+      let salary_range = "Not specified";
+      if (adzunaJob.salary_min && adzunaJob.salary_max) {
+        salary_range = `$${adzunaJob.salary_min.toLocaleString()} - $${adzunaJob.salary_max.toLocaleString()}`;
+      } else if (adzunaJob.salary_min) {
+        salary_range = `From $${adzunaJob.salary_min.toLocaleString()}`;
+      }
+      
+      return {
+        job_id: `adzuna-${adzunaJob.id}`,
+        job_title: adzunaJob.title,
+        company_name: adzunaJob.company?.display_name || "Unknown Company",
+        location: adzunaJob.location?.display_name || "Remote",
+        employment_type: adzunaJob.contract_time === "full_time" ? "Full-time" : (adzunaJob.contract_time || "Full-time"),
+        job_description: adzunaJob.description || "",
+        salary_range: salary_range
+      };
+    });
+  };
+
+  // 2. Fetch from Jooble
+  const fetchJooble = async () => {
+    if (!joobleApiKey) return [];
+
+    const response = await fetch(`https://jooble.org/api/${joobleApiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ keywords: what, location: "Remote", page: "1" }),
+      cache: "no-store"
+    });
+
+    if (!response.ok) throw new Error(`Jooble API status: ${response.status}`);
+    const data = await response.json();
+
+    return (data.jobs || []).map((joobleJob: any) => {
+      return {
+        job_id: `jooble-${joobleJob.id}`,
+        job_title: joobleJob.title,
+        company_name: joobleJob.company || "Unknown Company",
+        location: joobleJob.location || "Remote",
+        employment_type: joobleJob.type || "Full-time",
+        // remove HTML tags from snippet if any
+        job_description: joobleJob.snippet?.replace(/<[^>]*>?/gm, '') || "",
+        salary_range: joobleJob.salary || "Not specified"
+      };
+    });
+  };
+
+  try {
+    // Run all fetches concurrently
+    const results = await Promise.allSettled([fetchAdzuna(), fetchJooble()]);
+
+    // Aggregate successful results
+    results.forEach((result) => {
+      if (result.status === "fulfilled") {
+        allJobs = [...allJobs, ...result.value];
+      } else {
+        console.error("One of the job APIs failed:", result.reason);
+      }
+    });
+
+    // If both failed and we have no credentials, we still return whatever we got (maybe empty array)
+    return NextResponse.json(allJobs);
+  } catch (error) {
+    console.error("Error orchestrating API jobs fetch:", error);
+    return NextResponse.json({ error: "Failed to fetch jobs" }, { status: 500 });
+  }
 }
+

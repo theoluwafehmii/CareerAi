@@ -105,8 +105,13 @@ export default function DashboardPage() {
 
       setStatusMessage("Matching jobs...")
 
+      // Create a search query based on the top extracted skills
+      const searchQuery = extracted.matchedSkills.length > 0 
+        ? extracted.matchedSkills.map(s => s.name).slice(0, 2).join(" ") 
+        : "developer";
+
       // 3. Load hybrid jobs (Local + API)
-      const allJobs = await getHybridJobs()
+      const allJobs = await getHybridJobs(searchQuery)
 
       // 4. Match jobs based on detected skills
       const matches = matchJobs(extracted.matchedSkills, allJobs)

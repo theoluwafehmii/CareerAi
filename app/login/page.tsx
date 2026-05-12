@@ -54,7 +54,7 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, formData.email, formData.password)
       router.push("/dashboard")
     } catch (error: any) {
-      console.error("Login error:", error)
+      console.log("Login attempt failed:", error.code)
       let message = "Login failed. Please check your credentials."
       if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
         message = "Invalid email or password."

@@ -5,6 +5,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
 import Image from "next/image"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -40,6 +41,7 @@ export function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
+          <ThemeToggle />
           <Button variant="ghost" asChild>
             <Link href="/login">Login</Link>
           </Button>
@@ -49,13 +51,16 @@ export function Navbar() {
         </div>
 
         {/* Mobile Menu Button */}
-        <button
-          className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-secondary md:hidden"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-label="Toggle menu"
-        >
-          {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle />
+          <button
+            className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-secondary"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </nav>
 
       {/* Mobile Menu */}

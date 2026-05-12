@@ -184,6 +184,22 @@ const COMMON_TECHNICAL_SKILLS = [
   "firewalls",
   "encryption",
   
+  // Accounting & Finance
+  "financial reporting",
+  "bookkeeping",
+  "bank reconciliation",
+  "accounts payable",
+  "accounts receivable",
+  "budget preparation",
+  "payroll",
+  "tax documentation",
+  "expense tracking",
+  "invoice processing",
+  "quickbooks",
+  "sage",
+  "zoho books",
+  "accounting",
+  
   // Game & Mobile
   "c#",
   "unity",

@@ -75,7 +75,7 @@ export default function RegisterPage() {
 
       router.push("/dashboard")
     } catch (error: any) {
-      console.error("Registration error:", error)
+      console.log("Registration attempt failed:", error.code)
       let message = "Registration failed. Please try again."
       if (error.code === "auth/email-already-in-use") {
         message = "This email is already registered."

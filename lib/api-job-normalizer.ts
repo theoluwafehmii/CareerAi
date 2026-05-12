@@ -22,13 +22,16 @@ export interface ApiJob {
  * @param apiJob The raw job data from the API.
  * @returns A normalized Job object or null if critical data is missing.
  */
-export function normalizeApiJob(apiJob: ApiJob): Job | null {
+export function normalizeApiJob(apiJob: ApiJob, searchQuery: string = ""): Job | null {
   // Safety check: skip jobs without critical identifiers or content
   if (!apiJob.job_id || !apiJob.job_title || !apiJob.job_description) {
     return null;
   }
 
-  const { matchedSkills, additionalSkills } = extractSkills(apiJob.job_description);
+  // Combine description and the search query internally to guarantee the skills 
+  // used to fetch this job are accounted for in its requirements, without messing up the UI description.
+  const textToExtract = `${apiJob.job_title} ${apiJob.job_description} ${searchQuery}`;
+  const { matchedSkills, additionalSkills } = extractSkills(textToExtract);
   
   // Combine all detected skills
   const allDetectedSkills = [
@@ -55,10 +58,11 @@ export function normalizeApiJob(apiJob: ApiJob): Job | null {
  * Normalizes an array of raw API job objects, filtering out invalid ones.
  * 
  * @param apiJobs Array of raw API jobs.
+ * @param searchQuery The query string used to fetch these jobs.
  * @returns Array of normalized Job objects.
  */
-export function normalizeApiJobs(apiJobs: ApiJob[]): Job[] {
+export function normalizeApiJobs(apiJobs: ApiJob[], searchQuery: string = ""): Job[] {
   return apiJobs
-    .map(normalizeApiJob)
+    .map(job => normalizeApiJob(job, searchQuery))
     .filter((job): job is Job => job !== null);
 }
